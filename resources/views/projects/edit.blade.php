@@ -1,3 +1,3 @@
-<div>
-    <!-- Very little is needed to make a happy life. - Marcus Aurelius -->
-</div>
+<x-projects.layout>
+    <x-slot:title>{{ $title }}</x-slot:title>
+</x-projects.layout>
