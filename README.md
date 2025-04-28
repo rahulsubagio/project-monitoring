@@ -43,6 +43,31 @@ Dibangun menggunakan:
 
 - CRUD Project:
   - Tambah Project baru
-    ![dashboard](/Documentation/image.png)
-    ![alt text](/Documentation/create-project.png)
+    ![create project](/Documentation/create-project.png)
+    ![dashboard](/Documentation/dashboard.png)
+
   - Edit dan Update Project
+    ![edit project](/Documentation/edit.png)
+
+  - Hapus Project
+    ![edit project](/Documentation/delete.png)
+
+- Upload Photo:
+  - Bisa upload foto profil Project Leader
+  - Foto akan tampil bulat di tabel Project Monitoring
+    ![edit project](/Documentation/upload.png)
+
+- Search, Filter, Sort:
+  - Cari project berdasarkan kata kunci
+    ![edit project](/Documentation/search.png)
+  - Filter project berdasarkan status progress
+    ![edit project](/Documentation/filter.png)
+  - Urutkan project berdasarkan tanggal mulai (baru atau lama)
+    ![edit project](/Documentation/sorting.png)
+
+- Pagination:
+  - Data project dipaginasi agar rapi
+    ![edit project](/Documentation/page.png)
+
+---
+
