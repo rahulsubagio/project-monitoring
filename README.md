@@ -43,6 +43,6 @@ Dibangun menggunakan:
 
 - CRUD Project:
   - Tambah Project baru
-    ![dashboard](/public/storage/photos/image.png)
-    ![alt text](/public/storage/photos/create-project.png)
+    ![dashboard](/Documentation/image.png)
+    ![alt text](/Documentation/create-project.png)
   - Edit dan Update Project
