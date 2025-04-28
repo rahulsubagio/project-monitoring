@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class ProjectController extends Controller
 {
@@ -13,20 +14,40 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::query();
+        $search = $request->query('search');
+        $progress_filter = $request->query('progress_filter'); // "all", "completed", "in_progress"
+        $sort_order = $request->query('sort_order'); // "latest" or "oldest"
 
-        if ($request->search) {
-            $query->where('project_name', 'like', '%' . $request->search . '%')
-                ->orWhere('client', 'like', '%' . $request->search . '%')
-                ->orWhere('project_leader', 'like', '%' . $request->search . '%');
-        }
+        $projects = Project::query()
+            ->when($search, function ($query) use ($search) {
+                $query->where('project_name', 'like', "%{$search}%")
+                    ->orWhere('client', 'like', "%{$search}%")
+                    ->orWhere('project_leader', 'like', "%{$search}%");
+            })
+            ->when($progress_filter, function ($query) use ($progress_filter) {
+                if ($progress_filter === 'completed') {
+                    $query->where('progress', 100);
+                } elseif ($progress_filter === 'in_progress') {
+                    $query->where('progress', '<', 100);
+                }
+            })
+            ->when($sort_order, function ($query) use ($sort_order) {
+                if ($sort_order === 'oldest') {
+                    $query->orderBy('start_date', 'asc');
+                } else {
+                    $query->orderBy('start_date', 'desc'); // default latest
+                }
+            }, function ($query) {
+                $query->orderBy('start_date', 'desc'); // default kalau sort_order kosong
+            })
+            ->paginate(3)
+            ->appends([
+                'search' => $search,
+                'progress_filter' => $progress_filter,
+                'sort_order' => $sort_order
+            ]);
 
-        if ($request->progress_filter) {
-            $query->where('progress', $request->progress_filter);
-        }
-
-        $projects = $query->latest()->paginate(5);
-        return view('projects.index', ['title' => 'Dashboard'], compact('projects'));
+        return view('projects.index', ['title' => 'Dashboard'], compact('projects', 'search', 'progress_filter', 'sort_order'));
     }
 
     /**
@@ -42,13 +63,15 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
+
         $validated = $request->validate([
             'project_name'      => 'required',
             'client'            => 'required',
             'project_leader'    => 'required',
             'leader_email'      => 'required|email',
-            'start_date'        => 'required|date',
-            'end_date'          => 'required|date',
+            'start_date'        => 'required|string',
+            'end_date'          => 'required|string',
             'progress'          => 'required|integer|min:0|max:100',
             'leader_photo'      => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ]);
@@ -57,8 +80,12 @@ class ProjectController extends Controller
             $validated['leader_photo'] = $request->file('leader_photo')->store('photos', 'public');
         }
 
+        $validated['start_date'] = Carbon::createFromFormat('m/d/Y', $validated['start_date'])->format('Y-m-d');
+        $validated['end_date'] = Carbon::createFromFormat('m/d/Y', $validated['end_date'])->format('Y-m-d');
+
         Project::create($validated);
-        return redirect()->route('projects.index', ['title' => 'Dashboard'])->with('success', 'Project created successfully.');
+
+        return redirect()->route('projects.index')->with('success', 'Project created successfully.');
     }
 
     /**
@@ -100,7 +127,11 @@ class ProjectController extends Controller
             $validated['leader_photo'] = $request->file('leader_photo')->store('photos', 'public');
         }
 
+        $validated['start_date'] = \Carbon\Carbon::createFromFormat('m/d/Y', $validated['start_date'])->format('Y-m-d');
+        $validated['end_date'] = \Carbon\Carbon::createFromFormat('m/d/Y', $validated['end_date'])->format('Y-m-d');
+
         $project->update($validated);
+
         return redirect()->route('projects.index', ['title' => 'Dashboard'])->with('success', 'Project updated successfully.');
     }
 
@@ -113,6 +144,6 @@ class ProjectController extends Controller
             Storage::disk('public')->delete($project->leader_photo);
         }
         $project->delete();
-        return redirect()->route('projects.index', ['title' => 'Dashboard'])->with('success', 'Project deleted successfully.');
+        return redirect()->route('projects.index')->with('success', 'Project deleted successfully.');
     }
 }
